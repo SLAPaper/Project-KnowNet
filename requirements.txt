@@ -1,7 +1,7 @@
 bottle
 defusedxml
+flake8
 gensim
-git+https://gitlab.com/pycqa/flake8
 lxml
 matplotlib
 mypy

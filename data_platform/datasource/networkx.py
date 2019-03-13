@@ -1,7 +1,7 @@
 """data source class for graph storage with NetworkX."""
 
 from pathlib import Path
-from typing import Dict, List, NoReturn, Optional, Set, Tuple
+from typing import Any, Dict, List, NoReturn, Optional, Set, Tuple, cast
 
 import networkx as nx
 
@@ -41,7 +41,7 @@ class NetworkXDS(GraphDataSource):
         if path_loc.is_dir():
             self._loc = path_loc
         else:
-            self._loc = path_loc.parent
+            self._loc = cast(Path, path_loc.parent)
 
         self._config = config
         self._data: Dict[GraphNameType, GraphType] = {}
@@ -94,7 +94,7 @@ class NetworkXDS(GraphDataSource):
         raise NotSupportedError("NetworkX data source has no query method.")
 
     def _filter_graph(self, key: GraphKeyType) -> List[GraphNameType]:
-        graph_cond: List[Tuple] = []
+        graph_cond: List[Tuple[Any, Any]] = []
 
         if isinstance(key, str):
             graph_cond.append((key, None))
@@ -119,7 +119,7 @@ class NetworkXDS(GraphDataSource):
         return result
 
     def _filter_node(self, key: NodeKeyType) -> List[NodeKeyPair]:
-        graph_node_cond: List[Tuple] = []
+        graph_node_cond: List[Tuple[Any, Any, Any]] = []
         if isinstance(key, tuple):
             graph_node_cond.append((key[0], key[1], None))
 
@@ -130,6 +130,7 @@ class NetworkXDS(GraphDataSource):
         if isinstance(key, dict):
             for (g_n, n_n), cond in key.items():
                 graph_node_cond.append((g_n, n_n, cond))
+
         result = []
         for graph_name, node_name, _ in graph_node_cond:
             is_graph_wildcard = graph_name.startswith('@*')

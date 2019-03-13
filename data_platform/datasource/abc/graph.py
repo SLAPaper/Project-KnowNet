@@ -68,7 +68,7 @@ class GraphDataSource(BaseDataSource):
         pass
 
     @abstractmethod
-    def read_graph(self, key: GraphKeyType) -> GraphType:
+    def read_graph(self, key: GraphKeyType) -> Dict[GraphNameType, GraphType]:
         pass
 
     @abstractmethod

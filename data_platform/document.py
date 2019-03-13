@@ -20,9 +20,9 @@ class DocumentSet(UserDict):
 class Document:
     """Class represents one document."""
 
-    def __init__(self, root: 'Root', metadata_dict: tg.Dict[tg.Text, 'MetaData']) -> None:
+    def __init__(self, root: 'Root', metadata_dict: tg.Mapping[tg.Text, 'MetaData']) -> None:
         self._root = root
-        self._metadata = metadata_dict
+        self._metadata = {**metadata_dict}
 
         self._id: tg.Text = ''
 
@@ -37,7 +37,7 @@ class Document:
         return self._id
 
     @id_.setter
-    def id_(self, value) -> None:
+    def id_(self, value: tg.Text) -> None:
         self._id = value
         self._root.document_id = value
         for meta in self._metadata.values():
@@ -48,7 +48,7 @@ class Document:
         return self._root
 
     @property
-    def metadatas(self) -> tg.Dict[tg.Text, tg.Any]:
+    def metadatas(self) -> tg.Dict[tg.Text, 'MetaData']:
         return self._metadata
 
     # get method
@@ -60,7 +60,7 @@ class Document:
         return self._root.get_sections()
 
     def get_paragraphs(self) -> tg.Dict[tg.Text, 'Paragraph']:
-        paras: tg.Iterator[Paragraph] = (chain.from_iterable(sec.get_paragraphs() for sec in self._root.get_sections()))
+        paras: tg.Iterable[Paragraph] = (chain.from_iterable(sec.get_paragraphs() for sec in self._root.get_sections()))
         return {para.id_: para for para in paras}
 
     # section manipulate
@@ -86,7 +86,7 @@ class Element(ABC):
     # # serialize/deserialize
     @classmethod
     @abstractmethod
-    def from_dict(cls, init_dict: tg.Dict) -> 'Element':
+    def from_dict(cls, init_dict: tg.Mapping) -> 'Element':
         pass
 
     @abstractmethod
@@ -136,19 +136,19 @@ class Element(ABC):
 class Root(Element):
     """Class represents the root element of a document."""
 
-    def __init__(self, section_list: tg.List['Section'], *args, **kwargs) -> None:
+    def __init__(self, section_list: tg.Sequence['Section'], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.sections = section_list
+        self.sections: tg.List[Section] = list(section_list)
         self.id_ = '/root'
 
     def __iter__(self) -> tg.Iterator['Section']:
         return iter(self.sections)
 
-    def __getitem__(self, key) -> 'Section':
-        return self.sections[key]
+    def __getitem__(self, index) -> 'Section':
+        return self.sections[index]
 
     @classmethod
-    def from_dict(cls, init_dict: tg.Dict) -> 'Root':
+    def from_dict(cls, init_dict: tg.Mapping) -> 'Root':
         section_list = init_dict['section_list']
         init_args = init_dict.get('init_args', [])
         init_kwargs = init_dict.get('init_kwargs', {})
@@ -189,13 +189,13 @@ class Root(Element):
 class MetaData(Element):
     """Class represents a metadata element of a document."""
 
-    def __init__(self, meta_dict: tg.Dict[tg.Text, tg.Any], *args, **kwargs) -> None:
+    def __init__(self, meta_dict: tg.Mapping[tg.Text, tg.Any], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.meta_dict = meta_dict
+        self.meta_dict = {**meta_dict}
         self.id_ = '/metadata'
 
     @classmethod
-    def from_dict(cls, init_dict: tg.Dict) -> 'MetaData':
+    def from_dict(cls, init_dict: tg.Mapping) -> 'MetaData':
         meta_dict = init_dict['meta_dict']
         init_args = init_dict.get('init_args', [])
         init_kwargs = init_dict.get('init_kwargs', {})
@@ -236,9 +236,9 @@ class MetaData(Element):
 class Box(Element):
     """Abstract class represents a box element with a sequence of contents."""
 
-    def __init__(self, content_list: tg.Iterable['Element'], *args, **kwargs) -> None:
+    def __init__(self, content_list: tg.Union[tg.Sequence['Box'], tg.Sequence['Inline']], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.content_list = list(content_list)
+        self.content_list = [c for c in content_list]
 
     def __getitem__(self, key) -> 'Element':
         return self.content_list[key]
@@ -249,8 +249,8 @@ class Box(Element):
     def get_text(self) -> tg.Text:
         return '\n'.join(c.get_text() for c in self.content_list) + '\n'
 
-    def set_content(self, content_list: tg.Iterable['Element']) -> None:
-        self.content_list = list(content_list)
+    def set_content(self, content_list: tg.Union[tg.Sequence['Box'], tg.Sequence['Inline']]) -> None:
+        self.content_list = [c for c in content_list]
 
 
 class Section(Box):
@@ -259,17 +259,17 @@ class Section(Box):
     a section can contain multiple sections OR paragraphs, but not both
     """
 
-    def __init__(self, content_list: tg.Iterable['Box'], *args, **kwargs) -> None:
+    def __init__(self, content_list: tg.Sequence['Box'], *args, **kwargs) -> None:
         super().__init__(content_list, *args, **kwargs)
 
     @classmethod
-    def from_dict(cls, init_dict: tg.Dict) -> 'Section':
+    def from_dict(cls, init_dict: tg.Mapping) -> 'Section':
         subsections = init_dict.get('subsections')
         paragraphs = init_dict.get('paragraphs')
         init_args = init_dict.get('init_args', [])
         init_kwargs = init_dict.get('init_kwargs', {})
 
-        contlist: tg.List['Box']
+        contlist: tg.Sequence['Box']
         if subsections:
             contlist = [Section.from_dict(sec_dict) for sec_dict in subsections]
         elif paragraphs:
@@ -315,11 +315,11 @@ class Section(Box):
 class Paragraph(Box):
     """Class represents a paragraph element of a document."""
 
-    def __init__(self, content_list: tg.Iterable['Inline'], *args, **kwargs) -> None:
+    def __init__(self, content_list: tg.Sequence['Inline'], *args, **kwargs) -> None:
         super().__init__(content_list, *args, **kwargs)
 
     @classmethod
-    def from_dict(cls, init_dict: tg.Dict) -> 'Paragraph':
+    def from_dict(cls, init_dict: tg.Mapping) -> 'Paragraph':
         inline_list = init_dict['inline_list']
         init_args = init_dict.get('init_args', [])
         init_kwargs = init_dict.get('init_kwargs', {})
@@ -357,7 +357,7 @@ class Text(Inline):
         self.content = content
 
     @classmethod
-    def from_dict(cls, init_dict: tg.Dict) -> 'Text':
+    def from_dict(cls, init_dict: tg.Mapping) -> 'Text':
         type_ = init_dict['type']
         init_args = init_dict.get('init_args', [])
         init_kwargs = init_dict.get('init_kwargs', {})
@@ -388,14 +388,14 @@ class Text(Inline):
 class Tag(Inline):
     """Class for in-line tag."""
 
-    def __init__(self, tag_name: tg.Text, tag_text: tg.Text, tag_attr: tg.Dict[tg.Text, tg.Text], *args, **kwargs) -> None:
+    def __init__(self, tag_name: tg.Text, tag_text: tg.Text, tag_attr: tg.Mapping[tg.Text, tg.Text], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.tag_name = tag_name
         self.tag_text = tag_text
-        self.tag_attr = tag_attr
+        self.tag_attr = {**tag_attr}
 
     @classmethod
-    def from_dict(cls, init_dict: tg.Dict) -> 'Tag':
+    def from_dict(cls, init_dict: tg.Mapping) -> 'Tag':
         type_ = init_dict['type']
         init_args = init_dict.get('init_args', [])
         init_kwargs = init_dict.get('init_kwargs', {})

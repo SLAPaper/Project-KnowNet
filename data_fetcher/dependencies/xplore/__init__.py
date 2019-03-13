@@ -1,1 +1,1 @@
-from xplore.xploreapi import XPLORE  # noqa
+from .xploreapi import XPLORE  # noqa

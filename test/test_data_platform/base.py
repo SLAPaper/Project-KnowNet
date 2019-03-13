@@ -1,14 +1,16 @@
 import unittest as ut
 import tempfile
+from abc import abstractclassmethod, abstractmethod
 
 
 class BaseTestDataSource(ut.TestCase):
-    @classmethod
+    @abstractclassmethod
     def get_test_class(cls):
         """Import and return the test class"""
 
         raise NotImplementedError
 
+    @abstractmethod
     def get_test_instance(self, temp_location):
         """Initialize and return the test class.
         Use temp_location as storage if necessary"""

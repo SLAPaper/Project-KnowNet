@@ -3,7 +3,7 @@ import unittest as ut
 
 class TestConfig(ut.TestCase):
     def test_global_config(self):
-        from data_platform.config import get_global_config, ConfigDicts
+        from data_platform.config import get_global_config, _ConfigDicts
 
         site_wise = {
             'a': 0,
@@ -19,7 +19,7 @@ class TestConfig(ut.TestCase):
             'c': 2,
             'e': 2
         }
-        config_dicts = ConfigDicts(site_wise, user, local)
+        config_dicts = _ConfigDicts(site_wise, user, local)
 
         result = {
             'a': 0,

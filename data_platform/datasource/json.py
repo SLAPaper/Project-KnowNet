@@ -2,10 +2,10 @@
 
 import json
 from pathlib import Path
-from typing import Dict, Iterable, List, NoReturn, Optional, Set, Text
+from typing import Dict, Iterable, List, NoReturn, Optional, Set, Text, cast
 
 from ..config import ConfigManager
-from .abc.doc import DocDataSource, DocKeyPair, DocKeyType, DocValDict
+from .abc.doc import DocDataSource, DocKeyPair, DocKeyType, DocValDict, DocValMap
 from .exception import NotSupportedError
 
 
@@ -27,7 +27,7 @@ class JSONDS(DocDataSource):
         if path_loc.is_dir():
             self._loc = path_loc
         else:
-            self._loc = path_loc.parent
+            self._loc = cast(Path, path_loc.parent)
 
         self._config = config
         self._data: Dict[Text, Dict] = {}
@@ -106,7 +106,7 @@ class JSONDS(DocDataSource):
     def query(self, query: str, *args, **kwargs) -> NoReturn:
         raise NotSupportedError("JSON data source has no query method.")
 
-    def create_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: Optional[DocValDict] = None) -> List[DocKeyPair]:
+    def create_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: Optional[DocValMap] = None) -> List[DocKeyPair]:
         """Create doc in data source."""
         if val is None:
             val = {}
@@ -132,7 +132,7 @@ class JSONDS(DocDataSource):
                     result[DocKeyPair(ds, d)] = self._data[ds][d]
         return result
 
-    def update_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: Optional[DocValDict] = None) -> List[DocKeyPair]:
+    def update_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: Optional[DocValMap] = None) -> List[DocKeyPair]:
         if val is None:
             val = {}
 

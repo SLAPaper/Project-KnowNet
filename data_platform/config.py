@@ -6,7 +6,7 @@ import platform
 from collections import OrderedDict
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Dict, Hashable, Mapping, NamedTuple, Optional, Sequence, Text, Union
+from typing import (Any, Dict, Hashable, Mapping, NamedTuple, Optional, Sequence, Text, Union, cast)
 
 
 class ConfigOpType(Enum):
@@ -151,32 +151,32 @@ class ConfigManager(OrderedDict):
 GLOBAL_CONFIG_FILENAME = ".knownet.json"
 
 
-class ConfigFiles(NamedTuple):
+class _ConfigFiles(NamedTuple):
     site_wise: Path
     user: Path
     local: Path
 
 
-class ConfigDicts(NamedTuple):
+class _ConfigDicts(NamedTuple):
     site_wise: Dict
     user: Dict
     local: Dict
 
 
-def get_global_config(config_dicts: ConfigDicts = None) -> ConfigManager:
-    if config_dicts is None:
-        config_dicts = get_global_config_dicts(get_global_config_files())
+def get_global_config(_config_dicts: _ConfigDicts = None) -> ConfigManager:
+    if _config_dicts is None:
+        _config_dicts = _get_global_config_dicts(_get_global_config_files())
 
     global_config = ConfigManager()
 
-    global_config.update(config_dicts.site_wise)
-    global_config.update(config_dicts.user)
-    global_config.update(config_dicts.local)
+    global_config.update(_config_dicts.site_wise)
+    global_config.update(_config_dicts.user)
+    global_config.update(_config_dicts.local)
 
     return global_config
 
 
-def get_global_config_dicts(config_files: ConfigFiles) -> ConfigDicts:
+def _get_global_config_dicts(config_files: _ConfigFiles) -> _ConfigDicts:
     site_wise: Dict = {}
     user: Dict = {}
     local: Dict = {}
@@ -193,10 +193,10 @@ def get_global_config_dicts(config_files: ConfigFiles) -> ConfigDicts:
         with config_files.local.open() as f:
             local = json.load(f)
 
-    return ConfigDicts(site_wise, user, local)
+    return _ConfigDicts(site_wise, user, local)
 
 
-def get_global_config_files() -> ConfigFiles:
+def _get_global_config_files() -> _ConfigFiles:
     current_platform = platform.system()
     if current_platform == 'Linux':
         site_wise = Path('/etc')  # /etc/
@@ -204,16 +204,20 @@ def get_global_config_files() -> ConfigFiles:
     elif current_platform == 'Windows':
         site_wise = Path(os.getenv("PROGRAMDATA", ''))  # %PROGRAMDATA%
         user = Path(os.getenv("APPDATA", ''))  # %APPDATA%
+    else:
+        site_wise = Path()
+        user = Path()
 
     site_wise_file = site_wise / GLOBAL_CONFIG_FILENAME
     user_file = user / GLOBAL_CONFIG_FILENAME
 
     # check local config file, from current work folder up, up to 10 level
-    p_cwd = Path.cwd()
+    p_cwd: Path = Path.cwd()
+    detect_file = p_cwd / GLOBAL_CONFIG_FILENAME
     for _ in range(10):
         detect_file = p_cwd / GLOBAL_CONFIG_FILENAME
         if detect_file.exists():
             break
-        p_cwd = p_cwd.parent
+        p_cwd = cast(Path, p_cwd.parent)
 
-    return ConfigFiles(site_wise_file, user_file, detect_file)
+    return _ConfigFiles(site_wise_file, user_file, detect_file)

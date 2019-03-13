@@ -6,3 +6,4 @@ from .json import JSONDS
 from .networkx import NetworkXDS
 from .sqlite import SQLiteDS
 from .science_direct import ScienceDirectDS
+from .mongodb import MongoDBDS

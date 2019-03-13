@@ -12,7 +12,7 @@ from lxml import etree
 from .. import document as _doc
 from ..config import ConfigManager
 from ..document import Document, Element
-from .abc.doc import DocDataSource, DocFactory, DocKeyPair, DocKeyType, DocValDict
+from .abc.doc import DocDataSource, DocFactory, DocKeyPair, DocKeyType, DocValDict, DocValMap
 from .exception import NotSupportedError
 
 
@@ -303,13 +303,13 @@ class ScienceDirectDS(DocDataSource):
 
         return Document(doc_root, doc_meta)
 
-    def create_doc(self, key: DocKeyType, val: DocValDict) -> NoReturn:
+    def create_doc(self, key: DocKeyType, val: DocValMap) -> NoReturn:
         raise NotSupportedError("ScienceDirectDS is read-only.")
 
     def read_doc(self, key: DocKeyType = DocKeyPair('@*', '@*')) -> Dict[DocKeyPair, DocValDict]:
         self._load()
 
-        ds_d_c: List[Tuple] = self._format_doc_key(key)
+        ds_d_c: List[Tuple[Any, Any, Any]] = self._format_doc_key(key)
 
         doc_names = set()
         for docset_name, doc_name, _ in ds_d_c:
@@ -326,7 +326,7 @@ class ScienceDirectDS(DocDataSource):
         result = {DocKeyPair('_default', doc_name): self._data[doc_name] for doc_name in doc_names}
         return result
 
-    def update_doc(self, key: DocKeyType, val: DocValDict) -> NoReturn:
+    def update_doc(self, key: DocKeyType, val: DocValMap) -> NoReturn:
         raise NotSupportedError("ScienceDirectDS is read-only.")
 
     def delete_doc(self, key: DocKeyType) -> NoReturn:

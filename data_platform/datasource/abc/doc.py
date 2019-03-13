@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, NamedTuple, Optional, Text, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Text, Tuple, Union, Mapping, Sequence
 
 from . import BaseDataSource, ConditionDict
 from ...config import ConfigManager
@@ -12,9 +12,15 @@ class DocKeyPair(NamedTuple):
     doc_name: Text
 
 
+DocKeySequence = Sequence[DocKeyPair]
 DocKeyList = List[DocKeyPair]
+
+DocKeyMap = Mapping[DocKeyPair, ConditionDict]
 DocKeyDict = Dict[DocKeyPair, ConditionDict]
-DocKeyType = Union[DocKeyPair, DocKeyList, DocKeyDict]
+
+DocKeyType = Union[DocKeyPair, DocKeySequence, DocKeyList, DocKeyMap, DocKeyDict]
+
+DocValMap = Mapping[Text, Any]
 DocValDict = Dict[Text, Any]
 
 
@@ -41,8 +47,8 @@ class DocDataSource(BaseDataSource):
         self._factory: Optional[DocFactory] = None
 
     @staticmethod
-    def _format_doc_key(key: DocKeyType) -> List[Tuple]:
-        ds_d_c: List[Tuple] = []
+    def _format_doc_key(key: DocKeyType) -> List[Tuple[Any, Any, Any]]:
+        ds_d_c: List[Tuple[Any, Any, Any]] = []
         if isinstance(key, tuple):
             ds_d_c.append((key[0], key[1], None))
 
@@ -56,7 +62,7 @@ class DocDataSource(BaseDataSource):
         return ds_d_c
 
     @abstractmethod
-    def create_doc(self, key: DocKeyType, val: DocValDict) -> List[DocKeyPair]:
+    def create_doc(self, key: DocKeyType, val: DocValMap) -> List[DocKeyPair]:
         pass
 
     @abstractmethod
@@ -77,7 +83,7 @@ class DocDataSource(BaseDataSource):
         raise AttributeError('There is no factory to form document set!')
 
     @abstractmethod
-    def update_doc(self, key: DocKeyType, val: DocValDict) -> List[DocKeyPair]:
+    def update_doc(self, key: DocKeyType, val: DocValMap) -> List[DocKeyPair]:
         pass
 
     @abstractmethod

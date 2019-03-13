@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Text
 
-from .abc.doc import DocDataSource, DocKeyPair, DocKeyType, DocValDict
+from .abc.doc import (DocDataSource, DocKeyPair, DocKeyType, DocValDict, DocValMap)
 from .abc.graph import (EdgeKeyPair, EdgeKeyType, EdgeNamePair, EdgeValDict, GraphDataSource, GraphKeyType, GraphNameType, GraphType, GraphValType, NodeKeyPair,
                         NodeKeyType, NodeValDict)
 
@@ -78,9 +78,10 @@ class ArangoDBDS(DocDataSource, GraphDataSource):
     def reload(self):
         self._arangodb.reload()
 
-    def create_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: DocValDict = None) -> List[DocKeyPair]:
+    def create_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: DocValMap = None) -> List[DocKeyPair]:
         if val is None:
             val = {}
+        val_ = {**val}
 
         result: List[DocKeyPair] = []
         target = self._filter_doc(key)
@@ -91,8 +92,8 @@ class ArangoDBDS(DocDataSource, GraphDataSource):
             else:
                 collection = self._arangodb[ds]
 
-            val['doc_name_'] = d
-            collection.createDocument(val)
+            val_['doc_name_'] = d
+            collection.createDocument(val_)
             result.append(DocKeyPair(ds, d))
 
         return result
@@ -114,7 +115,7 @@ class ArangoDBDS(DocDataSource, GraphDataSource):
 
         return result
 
-    def update_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: DocValDict = None) -> List[DocKeyPair]:
+    def update_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: DocValMap = None) -> List[DocKeyPair]:
         if val is None:
             val = {}
 
@@ -152,40 +153,40 @@ class ArangoDBDS(DocDataSource, GraphDataSource):
         return result
 
     def create_graph(self, key: GraphKeyType, val: GraphValType) -> List[GraphNameType]:
-        pass
+        raise NotImplementedError
 
     def create_node(self, key: NodeKeyType, val: NodeValDict) -> List[NodeKeyPair]:
-        pass
+        raise NotImplementedError
 
     def create_edge(self, key: EdgeKeyType, val: EdgeValDict) -> List[EdgeKeyPair]:
-        pass
+        raise NotImplementedError
 
     def read_graph(self, key: GraphKeyType) -> GraphType:
-        pass
+        raise NotImplementedError
 
     def read_node(self, key: NodeKeyType) -> Dict[NodeKeyPair, NodeValDict]:
-        pass
+        raise NotImplementedError
 
     def read_edge(self, key: EdgeKeyType) -> Dict[EdgeKeyPair, EdgeValDict]:
-        pass
+        raise NotImplementedError
 
     def update_graph(self, key: GraphKeyType, val: GraphValType) -> List[GraphNameType]:
-        pass
+        raise NotImplementedError
 
     def update_node(self, key: NodeKeyType, val: NodeValDict) -> List[NodeKeyPair]:
-        pass
+        raise NotImplementedError
 
     def update_edge(self, key: EdgeKeyType, val: EdgeValDict) -> List[EdgeKeyPair]:
-        pass
+        raise NotImplementedError
 
     def delete_graph(self, key: GraphKeyType) -> int:
-        pass
+        raise NotImplementedError
 
     def delete_node(self, key: NodeKeyType) -> int:
-        pass
+        raise NotImplementedError
 
     def delete_edge(self, key: EdgeKeyType) -> int:
-        pass
+        raise NotImplementedError
 
     def query(self, query: Text, *args, **kwargs) -> Any:
         """Run query on data source."""

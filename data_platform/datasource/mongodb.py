@@ -1,7 +1,7 @@
-from typing import Dict, List, Any, Text
+from typing import Any, Dict, List, Text
 
 from ..config import ConfigManager
-from .abc.doc import DocDataSource, DocKeyPair, DocKeyType, DocValDict
+from .abc.doc import DocDataSource, DocKeyPair, DocKeyType, DocValDict, DocValMap
 from .exception import NotSupportedError
 
 try:
@@ -63,7 +63,7 @@ class MongoDBDS(DocDataSource):
     def reload(self):
         pass
 
-    def create_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: DocValDict = None) -> List[DocKeyPair]:
+    def create_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: DocValMap = None) -> List[DocKeyPair]:
         if val is None:
             val = {}
 
@@ -93,7 +93,7 @@ class MongoDBDS(DocDataSource):
 
         return result
 
-    def update_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: DocValDict = None) -> List[DocKeyPair]:
+    def update_doc(self, key: DocKeyType = DEFAULT_DOC_KEY, val: DocValMap = None) -> List[DocKeyPair]:
         if val is None:
             val = {}
 
